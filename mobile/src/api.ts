@@ -24,6 +24,11 @@ export const api = axios.create({
   timeout: 15000,
 });
 
+export async function healthCheck(): Promise<{ ok: boolean }> {
+  const { data } = await api.get<{ ok: boolean }>('/health');
+  return data;
+}
+
 api.interceptors.request.use(async (config) => {
   const token = await AsyncStorage.getItem(STORAGE_KEYS.token);
   if (token) {

@@ -1,33 +1,51 @@
 # PayPrompt
 
-**Problem:** Freelancers & small agencies lose time and cashflow because invoices are not tracked and payment follow-ups are inconsistent.
-
-**Target users:** Solo freelancers, small agencies, consultants.
-
-**Solution:** Mobile-first invoice tracker with due-date reminders, simple client CRM, and a “follow-up timeline” so nothing slips.
+Mobile-first invoice tracker for freelancers: clients, invoices, and due-date tracking.
 
 ## Monorepo
 - `backend/` Fastify + Prisma (SQLite by default)
 - `mobile/` Expo React Native app
 
-## Security principles
-- No hardcoded secrets; use `.env` files.
-- Input validation (Zod).
-- Auth (JWT) + password hashing.
-- Rate limiting and basic security headers.
+## Quickstart (local)
 
-## Getting started (local)
+### 1) Backend
 
-### Backend
 ```bash
 cd backend
+cp .env.example .env
+# IMPORTANT: set a strong JWT_SECRET
 npm install
+npm run db   # runs prisma migrate dev
 npm run dev
 ```
 
-### Mobile
+Health check:
+
+```bash
+curl http://127.0.0.1:4000/health
+```
+
+### 2) Mobile
+
 ```bash
 cd mobile
 npm install
 npm run start
 ```
+
+Notes:
+- Android emulator needs `http://10.0.2.2:4000` to reach the host machine.
+- iOS simulator can use `http://localhost:4000`.
+- Real device must use your LAN IP (e.g. `http://192.168.1.122:4000`).
+
+The app shows the active API base URL under **Settings → Connection**.
+
+## API routes
+- `POST /auth/register` → `{ email, password }`
+- `POST /auth/login` → `{ email, password }`
+- `GET /clients` (auth)
+- `POST /clients` (auth)
+- `DELETE /clients/:id` (auth)
+- `GET /invoices` (auth)
+- `POST /invoices` (auth)
+- `PATCH /invoices/:id` (auth)

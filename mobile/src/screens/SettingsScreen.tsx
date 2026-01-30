@@ -16,7 +16,7 @@ export function SettingsScreen(props: { onLogout: () => void }) {
           <Label>Bağlantı</Label>
           <Text style={{ color: theme.colors.text, fontSize: 15, lineHeight: 22 }}>API: {API_BASE_URL}</Text>
           <Text style={{ color: theme.colors.muted, fontSize: 13, lineHeight: 18 }}>
-            Android emulator için 10.0.2.2 kullanıyoruz. Gerçek cihazda LAN IP’ye geçmek gerekir.
+            Android emulator: 10.0.2.2. iOS simulator: localhost. Gerçek cihaz: LAN IP.
           </Text>
         </Card>
 

@@ -6,10 +6,18 @@ export const STORAGE_KEYS = {
 } as const;
 
 // NOTE:
-// - If you use `adb reverse tcp:4000 tcp:4000`, emulator can reach backend via 127.0.0.1.
-// - Otherwise, use http://10.0.2.2:4000 for Android emulator.
-// - On real device, set this to your LAN IP.
-export const API_BASE_URL = 'http://127.0.0.1:4000';
+// - Android emulator: use http://10.0.2.2:4000
+// - If you use `adb reverse tcp:4000 tcp:4000`, emulator can reach backend via http://127.0.0.1:4000
+// - iOS simulator: http://localhost:4000 works.
+// - Real device: use your LAN IP (e.g. http://192.168.1.122:4000)
+const DEV_BASE_URL = (() => {
+  // Web runs on your machine, so localhost works.
+  if (typeof window !== 'undefined') return 'http://localhost:4000';
+  // Android emulator can't reach host via localhost/127.0.0.1.
+  return 'http://10.0.2.2:4000';
+})();
+
+export const API_BASE_URL = DEV_BASE_URL;
 
 export const api = axios.create({
   baseURL: API_BASE_URL,

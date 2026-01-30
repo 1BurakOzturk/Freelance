@@ -15,7 +15,7 @@ function fmtMoney(amountCents: number, currency: string) {
   }
 }
 
-export function InvoicesScreen(props: { onNewInvoice: () => void }) {
+export function InvoicesScreen(props: { onNewInvoice: () => void; onOpenInvoice: (id: string) => void }) {
   const q = useQuery({ queryKey: ['invoices'], queryFn: invoicesApi.list });
   const items: Invoice[] = q.data ?? [];
 
@@ -40,11 +40,14 @@ export function InvoicesScreen(props: { onNewInvoice: () => void }) {
           ) : (
             <View style={{ gap: theme.spacing.md }}>
               {items.map((inv) => (
-                <View key={inv.id} style={{ gap: 2 }}>
-                  <Text style={{ color: theme.colors.text, fontWeight: '900' }}>{inv.title}</Text>
-                  <Label>
-                    {inv.client?.name ?? '—'} · {fmtMoney(inv.amountCents, inv.currency)} · {inv.status} · vade: {new Date(inv.dueDate).toLocaleDateString('tr-TR')}
-                  </Label>
+                <View key={inv.id} style={{ gap: 8 }}>
+                  <View style={{ gap: 2 }}>
+                    <Text style={{ color: theme.colors.text, fontWeight: '900' }}>{inv.title}</Text>
+                    <Label>
+                      {inv.client?.name ?? '—'} · {fmtMoney(inv.amountCents, inv.currency)} · {inv.status} · vade: {new Date(inv.dueDate).toLocaleDateString('tr-TR')}
+                    </Label>
+                  </View>
+                  <Button title="Detay" variant="secondary" onPress={() => props.onOpenInvoice(inv.id)} />
                 </View>
               ))}
             </View>

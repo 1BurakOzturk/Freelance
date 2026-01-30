@@ -3,6 +3,7 @@ import { Alert, ScrollView, Text, View } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { clientsApi, invoicesApi } from '../api';
+import { ClientPicker } from '../components/ClientPicker';
 import { Button, Card, H1, Input, Label, Screen } from '../ui';
 import { theme } from '../theme';
 
@@ -11,6 +12,7 @@ export function NewInvoiceScreen(props: { onDone: () => void }) {
   const clientsQ = useQuery({ queryKey: ['clients'], queryFn: clientsApi.list });
 
   const [clientId, setClientId] = React.useState('');
+  const [pickerOpen, setPickerOpen] = React.useState(false);
   const [title, setTitle] = React.useState('');
   const [amount, setAmount] = React.useState('');
   const [currency, setCurrency] = React.useState('TRY');
@@ -39,6 +41,7 @@ export function NewInvoiceScreen(props: { onDone: () => void }) {
   });
 
   const clients = clientsQ.data ?? [];
+  const selected = clients.find((c) => c.id === clientId) ?? clients[0];
 
   return (
     <Screen>
@@ -47,17 +50,21 @@ export function NewInvoiceScreen(props: { onDone: () => void }) {
 
         <Card>
           <Label>Müşteri</Label>
-          <Text style={{ color: theme.colors.muted, fontSize: 13 }}>
-            Şimdilik en basit seçim: ilk müşteri id. (UI selection iyileştirmesi sırada)
-          </Text>
           <Button
-            title={clients.length ? `Seç: ${clients.find((c) => c.id === clientId)?.name ?? clients[0].name}` : 'Önce müşteri ekle'}
+            title={clients.length ? (selected ? `Seçili: ${selected.name}` : 'Müşteri seç') : 'Önce müşteri ekle'}
             variant="secondary"
             onPress={() => {
-              if (!clients.length) return;
-              const next = clientId ? clients[(clients.findIndex((c) => c.id === clientId) + 1) % clients.length].id : clients[0].id;
-              setClientId(next);
+              if (!clients.length) return Alert.alert('Müşteri yok', 'Önce müşteri eklemelisin.');
+              setPickerOpen(true);
             }}
+          />
+
+          <ClientPicker
+            visible={pickerOpen}
+            clients={clients}
+            selectedId={selected?.id}
+            onSelect={(id) => setClientId(id)}
+            onClose={() => setPickerOpen(false)}
           />
 
           <Label>Başlık</Label>
@@ -79,6 +86,7 @@ export function NewInvoiceScreen(props: { onDone: () => void }) {
               if (!effectiveClientId) return Alert.alert('Müşteri yok', 'Önce müşteri eklemelisin.');
               setClientId(effectiveClientId);
               if (title.trim().length < 1) return Alert.alert('Eksik', 'Başlık gerekli.');
+              if (amount.trim().length < 1) return Alert.alert('Eksik', 'Tutar gerekli.');
               createM.mutate();
             }}
             disabled={createM.isPending}

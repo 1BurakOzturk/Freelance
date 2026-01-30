@@ -1,0 +1,68 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PARTIALLY_PAID
+  PAID
+  OVERDUE
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  clients   Client[]
+  invoices  Invoice[]
+}
+
+model Client {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  email     String?
+  phone     String?
+  company   String?
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  invoices  Invoice[]
+
+  @@index([userId])
+}
+
+model Invoice {
+  id          String        @id @default(cuid())
+  userId      String
+  clientId    String
+  title       String
+  amountCents Int
+  currency    String        @default("TRY")
+  status      InvoiceStatus @default(DRAFT)
+  issueDate   DateTime      @default(now())
+  dueDate     DateTime
+  paidAt      DateTime?
+  notes       String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  client      Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([clientId])
+  @@index([dueDate])
+  @@index([status])
+}

@@ -1,5 +1,6 @@
 import React from 'react';
-import { Alert, ScrollView, Text, View } from 'react-native';
+import { Alert, Platform, ScrollView, Text, View } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { clientsApi, invoicesApi } from '../api';
@@ -16,11 +17,12 @@ export function NewInvoiceScreen(props: { onDone: () => void }) {
   const [title, setTitle] = React.useState('');
   const [amount, setAmount] = React.useState('');
   const [currency, setCurrency] = React.useState('TRY');
-  const [dueDate, setDueDate] = React.useState(() => {
+  const [dueDate, setDueDate] = React.useState<Date>(() => {
     const d = new Date();
     d.setDate(d.getDate() + 7);
-    return d.toISOString();
+    return d;
   });
+  const [showDuePicker, setShowDuePicker] = React.useState(false);
 
   const createM = useMutation({
     mutationFn: async () => {
@@ -30,7 +32,7 @@ export function NewInvoiceScreen(props: { onDone: () => void }) {
         title: title.trim(),
         amountCents: Number.isFinite(amountCents) ? amountCents : 0,
         currency: currency.trim().toUpperCase(),
-        dueDate,
+        dueDate: dueDate.toISOString(),
       });
     },
     onSuccess: async () => {
@@ -76,8 +78,24 @@ export function NewInvoiceScreen(props: { onDone: () => void }) {
           <Label>Para birimi</Label>
           <Input placeholder="TRY" autoCapitalize="characters" value={currency} onChangeText={setCurrency} />
 
-          <Label>Vade (ISO)</Label>
-          <Input value={dueDate} onChangeText={setDueDate} />
+          <Label>Vade</Label>
+          <Button
+            title={dueDate.toLocaleDateString('tr-TR')}
+            variant="secondary"
+            onPress={() => setShowDuePicker(true)}
+          />
+
+          {showDuePicker ? (
+            <DateTimePicker
+              value={dueDate}
+              mode="date"
+              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+              onChange={(_e, date) => {
+                if (Platform.OS !== 'ios') setShowDuePicker(false);
+                if (date) setDueDate(date);
+              }}
+            />
+          ) : null}
 
           <Button
             title={createM.isPending ? 'Kaydediliyor…' : 'Kaydet'}

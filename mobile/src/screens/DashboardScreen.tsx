@@ -19,11 +19,14 @@ export function DashboardScreen(props: { onNewInvoice: () => void }) {
   const q = useQuery({ queryKey: ['invoices'], queryFn: invoicesApi.list });
 
   const items = q.data ?? [];
-  const dueSoon = items
-    .filter((i) => i.status !== 'PAID')
+  const openItems = items.filter((i) => i.status !== 'PAID');
+  const dueSoon = openItems
     .slice()
     .sort((a, b) => +new Date(a.dueDate) - +new Date(b.dueDate))
     .slice(0, 3);
+
+  const totalOpenCents = openItems.reduce((acc, i) => acc + i.amountCents, 0);
+  const overdueCount = openItems.filter((i) => new Date(i.dueDate).getTime() < Date.now()).length;
 
   return (
     <Screen>
@@ -32,8 +35,31 @@ export function DashboardScreen(props: { onNewInvoice: () => void }) {
 
         <Card>
           <View style={{ gap: 6 }}>
-            <Text style={{ color: theme.colors.text, fontSize: theme.typo.h2, fontWeight: '900' }}>Yaklaşan Vadeler</Text>
+            <Text style={{ color: theme.colors.text, fontSize: theme.typo.h2, fontWeight: '900' }}>Özet</Text>
             <Label>{q.isLoading ? 'Yükleniyor…' : `${items.length} fatura`}</Label>
+          </View>
+
+          <Divider />
+
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+            <View style={{ gap: 2 }}>
+              <Label>Toplam alacak</Label>
+              <Text style={{ color: theme.colors.text, fontWeight: '900', fontSize: 18 }}>{fmtMoney(totalOpenCents, 'TRY')}</Text>
+            </View>
+            <View style={{ gap: 2, alignItems: 'flex-end' }}>
+              <Label>Geciken</Label>
+              <Text style={{ color: theme.colors.text, fontWeight: '900', fontSize: 18 }}>{overdueCount}</Text>
+            </View>
+          </View>
+
+          <View style={{ height: 6 }} />
+          <Button title="Yeni Fatura" onPress={props.onNewInvoice} />
+        </Card>
+
+        <Card>
+          <View style={{ gap: 6 }}>
+            <Text style={{ color: theme.colors.text, fontSize: theme.typo.h2, fontWeight: '900' }}>Yaklaşan Vadeler</Text>
+            <Label>{q.isLoading ? 'Yükleniyor…' : `${openItems.length} açık fatura`}</Label>
           </View>
 
           <Divider />
@@ -54,9 +80,6 @@ export function DashboardScreen(props: { onNewInvoice: () => void }) {
               ))}
             </View>
           )}
-
-          <View style={{ height: 6 }} />
-          <Button title="Yeni Fatura" onPress={props.onNewInvoice} />
         </Card>
       </ScrollView>
     </Screen>

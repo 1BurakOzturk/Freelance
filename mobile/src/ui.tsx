@@ -6,8 +6,8 @@ export function Screen(props: { children: React.ReactNode }) {
   return <View style={[styles.screen]}>{props.children}</View>;
 }
 
-export function Card(props: { children: React.ReactNode }) {
-  return <View style={styles.card}>{props.children}</View>;
+export function Card(props: { children: React.ReactNode; style?: any }) {
+  return <View style={[styles.card, props.style]}>{props.children}</View>;
 }
 
 export function H1(props: { children: React.ReactNode }) {

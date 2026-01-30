@@ -1,9 +1,11 @@
 import React from 'react';
 import { Alert, ScrollView, Text, View } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import type { Invoice, InvoiceStatus } from '../api';
 import { invoicesApi } from '../api';
+import { buildFollowUpMessage, type FollowUpTone } from '../followup';
 import { Button, Card, Divider, H1, Label, Screen } from '../ui';
 import { theme } from '../theme';
 
@@ -25,6 +27,13 @@ function nextStatus(s: InvoiceStatus): InvoiceStatus {
 
 export function InvoiceDetailScreen(props: { invoice: Invoice; onBack: () => void }) {
   const qc = useQueryClient();
+
+  const [tone, setTone] = React.useState<FollowUpTone>('normal');
+  const [preview, setPreview] = React.useState<string>(() => buildFollowUpMessage(props.invoice, 'normal'));
+
+  React.useEffect(() => {
+    setPreview(buildFollowUpMessage(props.invoice, tone));
+  }, [props.invoice, tone]);
 
   const m = useMutation({
     mutationFn: async (patch: Partial<Pick<Invoice, 'status' | 'paidAt'>>) => {
@@ -70,6 +79,27 @@ export function InvoiceDetailScreen(props: { invoice: Invoice; onBack: () => voi
             variant="secondary"
             onPress={() => m.mutate({ status: isPaid ? 'SENT' : 'PAID', paidAt: isPaid ? null : new Date().toISOString() })}
             disabled={m.isPending}
+          />
+
+          <Divider />
+
+          <Label>Takip mesajı</Label>
+          <View style={{ flexDirection: 'row', gap: 10 }}>
+            <Button title={tone === 'soft' ? '✓ Yumuşak' : 'Yumuşak'} variant="secondary" onPress={() => setTone('soft')} />
+            <Button title={tone === 'normal' ? '✓ Normal' : 'Normal'} variant="secondary" onPress={() => setTone('normal')} />
+            <Button title={tone === 'firm' ? '✓ Sert' : 'Sert'} variant="secondary" onPress={() => setTone('firm')} />
+          </View>
+
+          <Card style={{ backgroundColor: '#0E1527' }}>
+            <Text style={{ color: theme.colors.text, fontSize: 14, lineHeight: 20 }}>{preview}</Text>
+          </Card>
+
+          <Button
+            title="Kopyala"
+            onPress={async () => {
+              await Clipboard.setStringAsync(preview);
+              Alert.alert('Kopyalandı', 'Takip mesajı panoya kopyalandı.');
+            }}
           />
 
           <Button title="Geri" variant="secondary" onPress={props.onBack} />
